@@ -24,10 +24,13 @@ kernel.random.entropy_avail.mean
 kernel.random.entropy_avail.high
 kernel.random.entropy_avail.low
 
-
-
 ## running 
 
 For example, send stdout to zabbix sender and error information to a log in /tmp
 
-``./entropy_monitor 2>&1 >/tmp/entropy_monitor_log | zabbix_sender``
+``stdbuf -oL ./entropy_monitor 2>&1 >/tmp/entropy_monitor_log | zabbix_sender -v -r -i - `` _AND_OTHER_PARAMETERS_SPECIFIC_TO_YOUR_DEPLOYMENT_
+
+* NOTE: ``stdbuf -oL`` makes sure the buffer is sent through the pipe on each newline
+  otherwise, data may stay in the pipe and not get send to zabbix_sender until the 
+  pipe is full (and the information out of date)
+

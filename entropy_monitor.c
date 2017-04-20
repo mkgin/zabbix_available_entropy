@@ -27,14 +27,17 @@
 #define FALSE 0
 #define ITERATIONS 60 // iterations to between outputting data
 #define SLEEP 1 // sleep interval between iterations in seconds
+#define NO_STDERR 1
 
 int main ()
 {
   int dev_random = open ("/dev/random", O_RDONLY, O_NONBLOCK);
+  //int avail_ent;
   int avail_ent;
   int result;
   int error_found = FALSE;
-  fprintf (stderr, "Collecting available entropy from /dev/random for %d iterations every %d seconds\n",
+  if ( !NO_STDERR )
+    fprintf (stderr, "Collecting available entropy from /dev/random for %d iterations every %d seconds\n",
 	   ITERATIONS, SLEEP);  
   // loop ... until error
   // maybe check for sigint or something else later
@@ -70,21 +73,26 @@ int main ()
 	  if (avail_ent < avail_entropy_low )
 	    avail_entropy_low = avail_ent;
 	  avail_entropy_sum = avail_entropy_sum + avail_ent;
-	 	  fprintf (stderr, "/dev/random avail_ent = %d  iters %d  sum %d\n",
+                    if ( !NO_STDERR ) 
+	 	  fprintf(stderr, "dev random avail_ent = %d  iters %d  sum %ld\n",
 		   avail_ent, i, avail_entropy_sum);
 	  sleep ( SLEEP );
 	} // end iteration loop
       avail_entropy_avg = (long) avail_entropy_sum / (long) ITERATIONS ;
+      if ( !NO_STDERR )
+	{
       fprintf (stderr, "/dev/random last %d iterations" , ITERATIONS );
       fprintf (stderr, "high: %d ", avail_entropy_high);
-      fprintf (stderr, "low : %l ", avail_entropy_low);
+      fprintf (stderr, "low : %d ", avail_entropy_low);
       // lets round it and keep it an int
       fprintf (stderr, "mean: %d\n", avail_entropy_avg );
+        }
       // data to stdout for piping to be piped to zabbix_sender 
       fprintf (stdout, "- kernel.random.entropy_avail.mean %d\n", avail_entropy_avg );
       fprintf (stdout, "- kernel.random.entropy_avail.high %d\n", avail_entropy_high );
       fprintf (stdout, "- kernel.random.entropy_avail.low %d\n", avail_entropy_low );
-      // end until error  loop
+      // this is probably not necessary. 
+      fflush_unlocked(stdout);
     }
   fprintf (stderr, "exiting due to error\n");
   close (dev_random);
