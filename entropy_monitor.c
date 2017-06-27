@@ -144,6 +144,11 @@ int main ()
           avail_ent_previous = avail_ent;   
 	  sleep ( SLEEP );
 	} // end iteration loop
+      // account for first measurement ( if there is a streak)
+      if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
+        max_consecutive_below_read_wakeup_threshold_count++;
+      if ( max_consecutive_below_write_wakeup_threshold_count > 0 )
+        max_consecutive_below_write_wakeup_threshold_count++;
       avail_entropy_avg = (long) avail_entropy_sum / (long) ITERATIONS ;
       if ( !NO_STDERR )
 	{
