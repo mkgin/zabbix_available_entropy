@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <linux/random.h>
 #include <fcntl.h>
+#include <syslog.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -32,7 +33,7 @@
 int main ()
 {
   int dev_random = open ("/dev/random", O_RDONLY, O_NONBLOCK);
-  //int avail_ent;
+  openlog ("entropy_monitor", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
   int avail_ent;
   int result;
   int error_found = FALSE;
@@ -62,7 +63,7 @@ int main ()
       int consecutive_below_read_wakeup_threshold_count_high = 0;
       int consecutive_below_write_wakeup_threshold_count_high = 0;
 
-      int avail_ent_previous = -1
+      int avail_ent_previous = -1;
       for ( i = 1; i <= ITERATIONS; i++)
 	{
 	  // test dev random that dev random is random and get avail entropy
@@ -121,6 +122,9 @@ int main ()
       // lets round it and keep it an int
       fprintf (stderr, "mean: %d\n", avail_entropy_avg );
         }
+      // determine what logs messages to send 
+ 
+
       // data to stdout for piping to be piped to zabbix_sender 
       fprintf (stdout, "- kernel.random.entropy_avail.mean %d\n", avail_entropy_avg );
       fprintf (stdout, "- kernel.random.entropy_avail.high %d\n", avail_entropy_high );
@@ -129,6 +133,8 @@ int main ()
       fflush_unlocked(stdout);
     }
   fprintf (stderr, "exiting due to error\n");
+  // send a log message too! 
   close (dev_random);
+  closelog ();
   return 1;
 }
