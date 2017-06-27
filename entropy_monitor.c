@@ -36,9 +36,15 @@ int main ()
   int avail_ent;
   int result;
   int error_found = FALSE;
+  int read_wakeup_threshold = 0;
+  int write_wakeup_threshold = 0;
   if ( !NO_STDERR )
     fprintf (stderr, "Collecting available entropy from /dev/random for %d iterations every %d seconds\n",
-	   ITERATIONS, SLEEP);  
+	   ITERATIONS, SLEEP);
+  // get read_wakeup_threshold
+  read_wakeup_threshold = 64;
+  // get write_wakeup_threshold
+  write_wakeup_threshold = 128;
   // loop ... until error
   // maybe check for sigint or something else later
   while (!error_found)
@@ -49,6 +55,14 @@ int main ()
       int avail_entropy_high = 0;
       int avail_entropy_low = 0;
       int i;
+      int below_read_wakeup_threshold_count = 0;
+      int below_write_wakeup_threshold_count = 0;
+      int consecutive_below_read_wakeup_threshold_count = 0;
+      int consecutive_below_write_wakeup_threshold_count = 0;
+      int consecutive_below_read_wakeup_threshold_count_high = 0;
+      int consecutive_below_write_wakeup_threshold_count_high = 0;
+
+      int avail_ent_previous = -1
       for ( i = 1; i <= ITERATIONS; i++)
 	{
 	  // test dev random that dev random is random and get avail entropy
@@ -68,14 +82,34 @@ int main ()
 	      avail_entropy_high = avail_ent;
 	      avail_entropy_low = avail_ent;
 	    }
-	  if (avail_ent > avail_entropy_high )
+	  // check for and set highs and lows
+	  if ( avail_ent > avail_entropy_high )
 	    avail_entropy_high = avail_ent;
-	  if (avail_ent < avail_entropy_low )
+	  if ( avail_ent < avail_entropy_low )
 	    avail_entropy_low = avail_ent;
+          // collect the sum to calculate the average later on
 	  avail_entropy_sum = avail_entropy_sum + avail_ent;
                     if ( !NO_STDERR ) 
 	 	  fprintf(stderr, "dev random avail_ent = %d  iters %d  sum %ld\n",
 		   avail_ent, i, avail_entropy_sum);
+	  // check if entropy is lower than the thresholds and increment counters
+          // and if it is not the first iteration check for consecutive low entropy and increment counters
+          if ( avail_ent < below_read_wakeup_threshold_count )
+	    {
+	      below_read_wakeup_threshold_count++;
+	      
+	    }
+          //when to reset the counter??
+          if ( avail_ent < below_write_wakeup_threshold_count )
+	    {
+	      below_write_wakeup_threshold_count++;
+	    }
+          // and check if it is the biggest streak of low entropy
+	  
+
+
+          // remember entropy previous for the next time around
+          avail_ent_previous = avail_ent;   
 	  sleep ( SLEEP );
 	} // end iteration loop
       avail_entropy_avg = (long) avail_entropy_sum / (long) ITERATIONS ;

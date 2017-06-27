@@ -34,3 +34,8 @@ For example, send stdout to zabbix sender and error information to a log in /tmp
   otherwise, data may stay in the pipe and not get send to zabbix_sender until the 
   pipe is full (and the information out of date)
 
+* TODO:
+** could eventually look into starting it as a daemon. ``bg`` and ``disown`` work well enough
+  for now as this is mainly used for experimental monitoring on servers that I am troubleshooting
+** submit messages to syslog... (warn on low entropy, info for measurements)
+  would be easier to correlate with problems when information is available in the logfile.
