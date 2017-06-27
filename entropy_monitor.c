@@ -50,7 +50,7 @@ int main ()
   // maybe check for sigint or something else later
   while (!error_found)
     {
-      // loop 60 terations (about 60 s)
+      // loop 60 iterations (about 60 s)
       long avail_entropy_sum = 0;
       int avail_entropy_avg = 0;
       int avail_entropy_high = 0;
@@ -60,8 +60,8 @@ int main ()
       int below_write_wakeup_threshold_count = 0;
       int consecutive_below_read_wakeup_threshold_count = 0;
       int consecutive_below_write_wakeup_threshold_count = 0;
-      int consecutive_below_read_wakeup_threshold_count_high = 0;
-      int consecutive_below_write_wakeup_threshold_count_high = 0;
+      int max_consecutive_below_read_wakeup_threshold_count = 0;
+      int max_consecutive_below_write_wakeup_threshold_count = 0;
 
       int avail_ent_previous = -1;
       for ( i = 1; i <= ITERATIONS; i++)
@@ -90,25 +90,56 @@ int main ()
 	    avail_entropy_low = avail_ent;
           // collect the sum to calculate the average later on
 	  avail_entropy_sum = avail_entropy_sum + avail_ent;
-                    if ( !NO_STDERR ) 
-	 	  fprintf(stderr, "dev random avail_ent = %d  iters %d  sum %ld\n",
-		   avail_ent, i, avail_entropy_sum);
+                   if ( !NO_STDERR ) 
+ 	  	       fprintf(stderr, "dev random avail_ent = %d  iters %d  sum %ld\n",
+		       avail_ent, i, avail_entropy_sum);
 	  // check if entropy is lower than the thresholds and increment counters
           // and if it is not the first iteration check for consecutive low entropy and increment counters
           if ( avail_ent < below_read_wakeup_threshold_count )
 	    {
 	      below_read_wakeup_threshold_count++;
-	      
 	    }
-          //when to reset the counter??
           if ( avail_ent < below_write_wakeup_threshold_count )
 	    {
 	      below_write_wakeup_threshold_count++;
 	    }
-          // and check if it is the biggest streak of low entropy
-	  
-
-
+          // calculate consecutive low entropy streaks
+          // and check if it is the biggest
+          if ( avail_ent_previous != -1 ) // don't do this if it is the first iteration
+            {
+              // check read wakeup threshold 
+	      if ( ( avail_ent_previous < read_wakeup_threshold   ) && ( avail_ent < read_wakeup_threshold  ))
+                {
+		  // in a streak ... if not zero add one before printing, as a streak means at least 2 consecutive measurements
+		  consecutive_below_read_wakeup_threshold_count++ ;
+                  if (consecutive_below_read_wakeup_threshold_count > max_consecutive_below_read_wakeup_threshold_count)
+		    {
+                      // this is the longest streak
+		      max_consecutive_below_read_wakeup_threshold_count = consecutive_below_read_wakeup_threshold_count;
+                    }                  
+                }
+              else 
+                {
+                  // we are no longer in a streak zero the counter
+                  consecutive_below_read_wakeup_threshold_count = 0; 
+                }
+              // check write wakeup threshold 
+	      if ( ( avail_ent_previous < write_wakeup_threshold   ) && ( avail_ent < write_wakeup_threshold  ))
+                {
+		  // in a streak ... if not zero add one before printing, as a streak means at least 2 consecutive measurements
+		  consecutive_below_write_wakeup_threshold_count++ ;
+                  if (consecutive_below_write_wakeup_threshold_count > max_consecutive_below_write_wakeup_threshold_count)
+		    {
+                      // this is the longest streak
+		      max_consecutive_below_write_wakeup_threshold_count = consecutive_below_write_wakeup_threshold_count;
+                    }                  
+                }
+              else 
+                {
+                  // we are no longer in a streak zero the counter
+                  consecutive_below_write_wakeup_threshold_count = 0; 
+                }
+            } 
           // remember entropy previous for the next time around
           avail_ent_previous = avail_ent;   
 	  sleep ( SLEEP );
@@ -122,9 +153,16 @@ int main ()
       // lets round it and keep it an int
       fprintf (stderr, "mean: %d\n", avail_entropy_avg );
         }
-      // determine what logs messages to send 
- 
-
+      // determine what log messages to send
+      // notify times below read or write wakeup threshold
+      if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
+	syslog ( LOG_WARNING, "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
+                 read_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count );
+      if ( max_consecutive_below_write_wakeup_threshold_count > 0 ) 
+	syslog ( LOG_WARNING, "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
+		 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count);
+      // info ... avg, log, high
+      syslog ( LOG_INFO , "avail.low %d high %d mean %d for last period", avail_entropy_low, avail_entropy_high, avail_entropy_avg);
       // data to stdout for piping to be piped to zabbix_sender 
       fprintf (stdout, "- kernel.random.entropy_avail.mean %d\n", avail_entropy_avg );
       fprintf (stdout, "- kernel.random.entropy_avail.high %d\n", avail_entropy_high );
@@ -133,7 +171,8 @@ int main ()
       fflush_unlocked(stdout);
     }
   fprintf (stderr, "exiting due to error\n");
-  // send a log message too! 
+  // send a log message too!
+  syslog ( LOG_ERR , "exiting due to error");
   close (dev_random);
   closelog ();
   return 1;
