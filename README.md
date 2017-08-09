@@ -39,3 +39,4 @@ For example, send stdout to zabbix sender and error information to a log in /tmp
   for now as this is mainly used for experimental monitoring on servers that I am troubleshooting
 ** submit messages to syslog... (warn on low entropy, info for measurements)
   would be easier to correlate with problems when information is available in the logfile.
+** when entropy is low could get a list running processes
