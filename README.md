@@ -22,14 +22,14 @@ or try the Makefile.
 autoreconf --install
 ./configure
 Makefile
-	      
-
 
 The following keys need to be configured on the server. They are available in the template.
 
 kernel.random.entropy_avail.mean
 kernel.random.entropy_avail.high
 kernel.random.entropy_avail.low
+kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold
+kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold
 
 ## running 
 
@@ -42,11 +42,11 @@ For example, send stdout to zabbix sender and error information to a log in /tmp
   pipe is full (and the information out of date)
 
 * TODO:
-** could eventually look into starting it as a daemon. ``bg`` and ``disown`` work well enough
-  for now as this is mainly used for experimental monitoring on servers that I am troubleshooting
-** submit messages to syslog... (warn on low entropy, info for measurements)
+  * could eventually look into starting it as a daemon. ``bg`` and ``disown`` work well enough
+    for now as this is mainly used for experimental monitoring on servers that I am troubleshooting
+  * submit messages to syslog... (warn on low entropy, info for measurements)
   would be easier to correlate with problems when information is available in the logfile.
-** when entropy is low could get a list running processes
-***  probably enough information in fuser.c from psmisc utilities  
-** could have a console or logging to a file mode... 
-** could also keep track of when the low entropy dips significantly
+  * when entropy is low could get a list running processes
+    *  probably enough information in fuser.c from psmisc utilities  
+  * could have a console or logging to a file mode... 
+  * could also keep track of when the low entropy dips significantly

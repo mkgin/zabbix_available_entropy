@@ -188,7 +188,10 @@ int main (int argc, char **argv)
 		  below_read_wakeup_threshold_count++;
 		}
 	      // if we are below a threshold check which processes and users are using /dev/random
-	      
+
+	      // log them (maybe log every sample as in theory these shouldn't last long)
+              fprintf (stdout, "- kernel.random.entropy_avail.log \"%s\"\n",
+			"low avalable entropy log text here" );
 	    }
           // calculate consecutive low entropy streaks
           // and check if it is the biggest
@@ -246,6 +249,7 @@ int main (int argc, char **argv)
       fprintf (stderr, "mean: %d\n", avail_entropy_avg );
         }
       // notify times below read or write wakeup threshold
+
       if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
         {
 	    if ( syslog_flag )
@@ -255,7 +259,7 @@ int main (int argc, char **argv)
 	      }
 	    if ( zabbix_flag )
 	      {
-		fprintf (stdout, "- kernel.random.entropy_avail.belowreadwuthreshholdmaxcount %d\n",
+		fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold %d\n",
 			 max_consecutive_below_read_wakeup_threshold_count );
 	      }
            if ( debug_flag || verbose_flag )
@@ -273,7 +277,7 @@ int main (int argc, char **argv)
 	      }
 	    if ( zabbix_flag )
 	      {
-		fprintf (stdout, "- kernel.random.entropy_avail.belowwritewuthreshholdmaxcount %d\n",
+		fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold %d\n",
 			 max_consecutive_below_write_wakeup_threshold_count );
 	      }
            if ( debug_flag || verbose_flag )
