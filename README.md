@@ -49,3 +49,4 @@ For example, send stdout to zabbix sender and error information to a log in /tmp
 ** when entropy is low could get a list running processes
 ***  probably enough information in fuser.c from psmisc utilities  
 ** could have a console or logging to a file mode... 
+** could also keep track of when the low entropy dips significantly

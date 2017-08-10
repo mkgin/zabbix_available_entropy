@@ -32,7 +32,7 @@
 // measure once a second, log results about once a minute
 #define ITERATIONS 60 // iterations to between outputting data
 #define ITERATIONS 6  // for testing
- // iterations to between outputting data
+// iterations to between outputting data
 #define SLEEP 1 // sleep interval between iterations in seconds
 // these should be options
 //#define NO_STDERR     1
@@ -43,9 +43,10 @@
 #define WRITE_WAKEUP_THRESHOLD  128
 #define WRITE_WAKEUP_THRESHOLD  4000 // for testing
 
-int main ()
+int main (int argc, char *argv[])
 {
-  int dev_random = open ("/dev/random", O_RDONLY, O_NONBLOCK);
+  const char dev_random_file[] = "/dev/random";
+  int dev_random_filehandle = open ( dev_random_file , O_RDONLY, O_NONBLOCK);
   openlog ("entropy_monitor", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
   int avail_ent;
   int result;
@@ -53,7 +54,7 @@ int main ()
   int read_wakeup_threshold = 0;
   int write_wakeup_threshold = 0;
   if ( !NO_STDERR )
-    fprintf (stderr, "Collecting available entropy from /dev/random for %d iterations every %d seconds\n",
+    fprintf (stderr, "Collecting available entropy from %s for %d iterations every %d seconds\n", dev_random_file,
 	   ITERATIONS, SLEEP);
   // TODO log start
   // get read_wakeup_threshold
@@ -82,7 +83,7 @@ int main ()
       for ( i = 1; i <= ITERATIONS; i++)
 	{
 	  // test dev random that dev random is random and get avail entropy
-	  result = ioctl (dev_random, RNDGETENTCNT, &avail_ent);
+	  result = ioctl (dev_random_filehandle, RNDGETENTCNT, &avail_ent);
 	  if (result)
 	    {
 	      fprintf (stderr, "/dev/random result = %d\n", result);
@@ -110,18 +111,19 @@ int main ()
 		       avail_ent, i, avail_entropy_sum);
 	  // check if entropy is lower than the thresholds and increment counters
           // and if it is not the first iteration check for consecutive low entropy and increment counters
-          if ( avail_ent < below_read_wakeup_threshold_count )
-	    {
-	      below_read_wakeup_threshold_count++;
-	    }
           if ( avail_ent < below_write_wakeup_threshold_count )
 	    {
 	      below_write_wakeup_threshold_count++;
+	      // read is always lower than write
+              if ( avail_ent < below_read_wakeup_threshold_count )
+		{
+		  below_read_wakeup_threshold_count++;
+		}
+	      // if we are below a threshold check which processes and users are using /dev/random
+	      
 	    }
 
-	  // if we are below a threshold check which processes and users are using /dev/random
-	  // 
-
+	  
           // calculate consecutive low entropy streaks
           // and check if it is the biggest
           if ( avail_ent_previous != -1 ) // don't do this if it is the first iteration
@@ -185,6 +187,7 @@ int main ()
         {
 	syslog ( LOG_WARNING, "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
                  read_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count );
+	      fprintf (stdout, "- kernel.random.entropy_avail.belowreadwuthreshholdmaxcount %d\n", max_consecutive_below_read_wakeup_threshold_count );
               if ( !NO_STDERR )
            fprintf (stderr,  "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
 		 write_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count);
@@ -195,11 +198,13 @@ int main ()
 	{
 	syslog ( LOG_WARNING, "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
 		 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count);
+	      fprintf (stdout, "- kernel.random.entropy_avail.belowwritewuthreshholdmaxcount %d\n", max_consecutive_below_write_wakeup_threshold_count );
         if ( !NO_STDERR )
            fprintf (stderr,  "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
 		 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count);
 	}
 
+      
       // info ... avg, log, high
       syslog ( LOG_INFO , "avail.low %d high %d mean %d for last period", avail_entropy_low, avail_entropy_high, avail_entropy_avg);
       // data to stdout for piping to be piped to zabbix_sender 
@@ -217,7 +222,7 @@ int main ()
   fprintf (stderr, "exiting due to error\n");
   // send a log message too!
   syslog ( LOG_ERR , "exiting due to error");
-  close (dev_random);
+  close (dev_random_filehandle);
   closelog ();
   return 1;
 }
