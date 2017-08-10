@@ -25,6 +25,8 @@
 #include <linux/random.h>
 #include <fcntl.h>
 #include <syslog.h>
+#include <sys/stat.h>
+
 
 #define TRUE 1
 #define FALSE 0
@@ -53,6 +55,7 @@ void show_help()
 }
 int main (int argc, char **argv)
 {
+  // constants
   const char dev_random_file[] = "/dev/random";
   // flags  to set with getopt.
   int debug_flag = FALSE;
@@ -61,14 +64,17 @@ int main (int argc, char **argv)
   int verbose_flag = FALSE;
   int test_flag = FALSE; // test values
 
-  // other dafaults
+  // other variables with a defaults
   int samples_of_avail_ent = ITERATIONS_DEFAULT;
-  int avail_ent;
-  int result;
   int error_found = FALSE;
   int read_wakeup_threshold = 0;
   int write_wakeup_threshold = 0;
+  // 
+  int avail_ent;
+  int result;
   int dev_random_filehandle;
+  struct stat dev_random_stat;
+  
 
   // getopt
   while (( result = getopt (argc, argv, "dhltvz")) != -1)
@@ -109,10 +115,12 @@ int main (int argc, char **argv)
 	       "debug_flag: %d syslog_flag: %d test_flag: %d verbose_flag: %d zabbix_flag: %d\n",
 	       debug_flag, syslog_flag, test_flag, verbose_flag, zabbix_flag);
     }
-
   // open files
   dev_random_filehandle = open ( dev_random_file , O_RDONLY, O_NONBLOCK);
-
+  // get inode number
+  stat( dev_random_file, &dev_random_stat );
+  if ( debug_flag )
+    fprintf(stderr, "DEBUG: %s I-node number: %ld\n",dev_random_file , (long) dev_random_stat.st_ino);
   if ( syslog_flag )
     {
       openlog ("entropy_monitor", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
@@ -240,14 +248,18 @@ int main (int argc, char **argv)
       if ( max_consecutive_below_write_wakeup_threshold_count > 0 )
         max_consecutive_below_write_wakeup_threshold_count++;
       avail_entropy_avg = (long) avail_entropy_sum / (long) samples_of_avail_ent ;
-      if ( debug_flag || verbose_flag )
+      
+      /*      if ( debug_flag || verbose_flag )
 	{
-      fprintf (stderr, "/dev/random last %d iterations" , samples_of_avail_ent );
+      fprintf (stderr, "/dev/random results for last %d iterations" , samples_of_avail_ent );
       fprintf (stderr, "high: %d ", avail_entropy_high);
       fprintf (stderr, "low : %d ", avail_entropy_low);
       // lets round it and keep it an int
       fprintf (stderr, "mean: %d\n", avail_entropy_avg );
-        }
+      }  */
+      // this is being sent twice
+
+      
       // notify times below read or write wakeup threshold
 
       if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
@@ -289,12 +301,13 @@ int main (int argc, char **argv)
       // info ... avg, log, high
       if ( syslog_flag )
 	{
-	  syslog ( LOG_INFO , "avail.low %d high %d mean %d for last period", avail_entropy_low, avail_entropy_high, avail_entropy_avg);
+	  syslog ( LOG_INFO , "avail.low %d high %d mean %d for last period of (%d) iterations", avail_entropy_low, avail_entropy_high, avail_entropy_avg, samples_of_avail_ent );
 	}
       if ( debug_flag || verbose_flag )
 	{
-	  fprintf ( stderr, "avail.low %d high %d mean %d for last period\n", avail_entropy_low, avail_entropy_high, avail_entropy_avg);
+	  fprintf ( stderr, "avail.low %d high %d mean %d for last period of (%d) iterations\n", avail_entropy_low, avail_entropy_high, avail_entropy_avg, samples_of_avail_ent );
 	}
+
       if ( zabbix_flag )
 	{
           // data to stdout for piping to be piped to zabbix_sender 
