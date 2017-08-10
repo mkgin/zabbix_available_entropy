@@ -40,3 +40,5 @@ For example, send stdout to zabbix sender and error information to a log in /tmp
 ** submit messages to syslog... (warn on low entropy, info for measurements)
   would be easier to correlate with problems when information is available in the logfile.
 ** when entropy is low could get a list running processes
+***  probably enough information in fuser.c from psmisc utilities  
+** could have a console or logging to a file mode... 

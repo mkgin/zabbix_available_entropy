@@ -27,13 +27,21 @@
 
 #define TRUE 1
 #define FALSE 0
+
+// eventually, these will be default values and set by options
 // measure once a second, log results about once a minute
 #define ITERATIONS 60 // iterations to between outputting data
+#define ITERATIONS 6  // for testing
+ // iterations to between outputting data
 #define SLEEP 1 // sleep interval between iterations in seconds
 // these should be options
-#define NO_STDERR     1
+//#define NO_STDERR     1
+#define NO_STDERR     0 // for testing
 #define NO_ZABBIX_OUT 0
 #define NO_SYSLOG     0
+#define READ_WAKEUP_THRESHOLD    64
+#define WRITE_WAKEUP_THRESHOLD  128
+#define WRITE_WAKEUP_THRESHOLD  4000 // for testing
 
 int main ()
 {
@@ -49,9 +57,9 @@ int main ()
 	   ITERATIONS, SLEEP);
   // TODO log start
   // get read_wakeup_threshold
-  read_wakeup_threshold = 64;
+  read_wakeup_threshold = READ_WAKEUP_THRESHOLD;
   // get write_wakeup_threshold
-  write_wakeup_threshold = 128;
+  write_wakeup_threshold = WRITE_WAKEUP_THRESHOLD;
   // Log threshold values
   // could send threshold values to zabbix to set the triggers.
 
@@ -111,6 +119,10 @@ int main ()
 	    {
 	      below_write_wakeup_threshold_count++;
 	    }
+
+	  // if we are below a threshold check which processes and users are using /dev/random
+	  // 
+
           // calculate consecutive low entropy streaks
           // and check if it is the biggest
           if ( avail_ent_previous != -1 ) // don't do this if it is the first iteration
@@ -172,10 +184,20 @@ int main ()
       if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
 	syslog ( LOG_WARNING, "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
                  read_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count );
+              if ( !NO_STDERR )
+           fprintf (stderr,  "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
+		 write_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count);
+	}
+      
       //send this to zabbix too 
-      if ( max_consecutive_below_write_wakeup_threshold_count > 0 ) 
+      if ( max_consecutive_below_write_wakeup_threshold_count > 0 )
+	{
 	syslog ( LOG_WARNING, "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
 		 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count);
+        if ( !NO_STDERR )
+           fprintf (stderr,  "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
+		 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count);
+	}
 
       // info ... avg, log, high
       syslog ( LOG_INFO , "avail.low %d high %d mean %d for last period", avail_entropy_low, avail_entropy_high, avail_entropy_avg);
@@ -183,7 +205,9 @@ int main ()
       fprintf (stdout, "- kernel.random.entropy_avail.mean %d\n", avail_entropy_avg );
       fprintf (stdout, "- kernel.random.entropy_avail.high %d\n", avail_entropy_high );
       fprintf (stdout, "- kernel.random.entropy_avail.low %d\n", avail_entropy_low );
-      // send 
+      // send
+
+      // console output mode?
 
       // this is probably not necessary. 
       fflush_unlocked(stdout);
