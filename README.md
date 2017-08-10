@@ -18,6 +18,13 @@ compile the entropy monitor and add to path
 
 ``gcc entropy_monitor.c -o entropy_monitor``
 
+or try the Makefile.
+autoreconf --install
+./configure
+Makefile
+	      
+
+
 The following keys need to be configured on the server. They are available in the template.
 
 kernel.random.entropy_avail.mean

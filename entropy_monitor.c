@@ -78,7 +78,6 @@ int main ()
       int consecutive_below_write_wakeup_threshold_count = 0;
       int max_consecutive_below_read_wakeup_threshold_count = 0;
       int max_consecutive_below_write_wakeup_threshold_count = 0;
-
       int avail_ent_previous = -1;
       for ( i = 1; i <= ITERATIONS; i++)
 	{
@@ -182,6 +181,8 @@ int main ()
       // notify times below read or write wakeup threshold
 
       if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
+
+        {
 	syslog ( LOG_WARNING, "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
                  read_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count );
               if ( !NO_STDERR )
