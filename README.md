@@ -35,7 +35,7 @@ kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold
 
 For example, send stdout to zabbix sender and error information to a log in /tmp
 
-``stdbuf -oL ./entropy_monitor 2>&1 >/tmp/entropy_monitor_log | zabbix_sender -v -r -i - `` _AND_OTHER_PARAMETERS_SPECIFIC_TO_YOUR_DEPLOYMENT_
+``stdbuf -oL ./entropy_monitor -z 2>&1 >/tmp/entropy_monitor_log | zabbix_sender -v -r -i - PLUS_YOUR_DEPLOYMENT_SPECIFIC_SETTINGS``
 
 * NOTE: ``stdbuf -oL`` makes sure the buffer is sent through the pipe on each newline
   otherwise, data may stay in the pipe and not get send to zabbix_sender until the 
