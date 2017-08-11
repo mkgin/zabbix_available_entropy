@@ -25,17 +25,23 @@ Makefile
 
 The following keys need to be configured on the server. They are available in the template.
 
-kernel.random.entropy_avail.mean
-kernel.random.entropy_avail.high
-kernel.random.entropy_avail.low
-kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold
-kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold
-
+* kernel.random.entropy_avail.mean
+* kernel.random.entropy_avail.high
+* kernel.random.entropy_avail.low
+* kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold
+* kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold
+* kernel.random.entropy_avail.log   (soon)
 ## running 
 
 For example, send stdout to zabbix sender and error information to a log in /tmp
 
 ``stdbuf -oL ./entropy_monitor -z 2>&1 >/tmp/entropy_monitor_log | zabbix_sender -v -r -i - PLUS_YOUR_DEPLOYMENT_SPECIFIC_SETTINGS``
+
+... then Ctrl-Z  and  ``bg ; disown`` so the task continure running in the background.
+
+for example ``zabbix_sender -r --host AGENT_HOSTNAME -z ZABBIX_SERVER --tls-psk-file zabbix_agentd.psk --tls-psk-identity PSK123 --tls-connect psk -i -`` 
+
+
 
 * NOTE: ``stdbuf -oL`` makes sure the buffer is sent through the pipe on each newline
   otherwise, data may stay in the pipe and not get send to zabbix_sender until the 
