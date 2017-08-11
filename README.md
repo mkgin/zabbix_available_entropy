@@ -11,6 +11,8 @@ having to do with /dev/random and it's configuration via the proc filesystem
 and/or sysctl and provide information about the configuration and perhaps 
 warn about setting that are not optimal
 
+![Chart Example](https://github.com/mkgin/zabbix_available_entropy/raw/master/ent_avail_screenshot.png)
+
 
 ## installation
 
