@@ -58,3 +58,9 @@ for example ``zabbix_sender -r --host AGENT_HOSTNAME -z ZABBIX_SERVER --tls-psk-
     *  probably enough information in fuser.c from psmisc utilities  
   * could have a console or logging to a file mode... 
   * could also keep track of when the low entropy dips significantly
+
+### Further reading about entropy and /dev/random
+
+* [Cloudflare Blog: Ensuring Randomness with Linux's Random Number Generator](https://blog.cloudflare.com/ensuring-randomness-with-linuxs-random-number-generator/)
+* [LWN: LCE: Don't play dice with random numbers](https://lwn.net/Articles/525459/)
+* [LWN: The search for truly random numbers in the kernel](https://lwn.net/Articles/567055/)
