@@ -248,31 +248,22 @@ int main (int argc, char **argv)
       if ( max_consecutive_below_write_wakeup_threshold_count > 0 )
         max_consecutive_below_write_wakeup_threshold_count++;
       avail_entropy_avg = (long) avail_entropy_sum / (long) samples_of_avail_ent ;
-      
-      /*      if ( debug_flag || verbose_flag )
-	{
-      fprintf (stderr, "/dev/random results for last %d iterations" , samples_of_avail_ent );
-      fprintf (stderr, "high: %d ", avail_entropy_high);
-      fprintf (stderr, "low : %d ", avail_entropy_low);
-      // lets round it and keep it an int
-      fprintf (stderr, "mean: %d\n", avail_entropy_avg );
-      }  */
-      // this is being sent twice
-
-      
       // notify times below read or write wakeup threshold
-
+      // send to zabbix always if enabled...even if value is 0, can alert of the zast value is > 0
+      if ( zabbix_flag )
+	{
+           fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold %d\n",
+			 max_consecutive_below_read_wakeup_threshold_count );
+           fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold %d\n",
+			 max_consecutive_below_write_wakeup_threshold_count );
+	      }
+	    // other only send if below threshold
       if ( max_consecutive_below_read_wakeup_threshold_count > 0 )
         {
 	    if ( syslog_flag )
 	      {
 		syslog ( LOG_WARNING, "entropy below read wakeup value %d for a maximum of %d consecutive measurements",
 			 read_wakeup_threshold, max_consecutive_below_read_wakeup_threshold_count );
-	      }
-	    if ( zabbix_flag )
-	      {
-		fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_read_wu_threshhold %d\n",
-			 max_consecutive_below_read_wakeup_threshold_count );
 	      }
            if ( debug_flag || verbose_flag )
 	     {
@@ -286,11 +277,6 @@ int main (int argc, char **argv)
 	      {
 		syslog ( LOG_WARNING, "entropy below write wakeup value %d for a maximum of %d consecutive measurements",
 			 write_wakeup_threshold, max_consecutive_below_write_wakeup_threshold_count );
-	      }
-	    if ( zabbix_flag )
-	      {
-		fprintf (stdout, "- kernel.random.entropy_avail.maxsamplesbelow_write_wu_threshhold %d\n",
-			 max_consecutive_below_write_wakeup_threshold_count );
 	      }
            if ( debug_flag || verbose_flag )
 	     {
@@ -307,7 +293,6 @@ int main (int argc, char **argv)
 	{
 	  fprintf ( stderr, "avail.low %d high %d mean %d for last period of (%d) iterations\n", avail_entropy_low, avail_entropy_high, avail_entropy_avg, samples_of_avail_ent );
 	}
-
       if ( zabbix_flag )
 	{
           // data to stdout for piping to be piped to zabbix_sender 
